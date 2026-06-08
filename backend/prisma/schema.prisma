@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  DEPARTMENT_HEAD
+  PTO_SPECIALIST
+  ADMIN
+  MANAGEMENT
+}
+
+enum TaskStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  NEW
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ScheduleEventType {
+  BROADCAST
+  STUDIO
+  SERVER
+  VIDEO_EDITING
+  RADIO
+  INGEST
+  ADVERTISING
+  RESERVE
+  OTHER
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  DEPARTMENT
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String
+
+  users     User[]
+
+  tasks Task[]
+  tickets Ticket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  position     String?
+  cabinet      String?
+  role         UserRole @default(USER)
+
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  scheduleEvents ScheduleEvent[]
+
+  conversationMembers ConversationMember[]
+  messages            Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdTasks Task[] @relation("CreatedTasks")
+  assignedTasks Task[] @relation("AssignedTasks")
+
+  createdTickets Ticket[] @relation("CreatedTickets")
+  assignedTickets Ticket[] @relation("AssignedTickets")
+  
+}
+
+model Task {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+
+  status      TaskStatus    @default(NEW)
+  priority    TaskPriority  @default(MEDIUM)
+
+  deadline    DateTime?
+
+  creatorId   Int
+  creator     User @relation("CreatedTasks", fields: [creatorId], references: [id])
+
+  assigneeId  Int?
+  assignee    User? @relation("AssignedTasks", fields: [assigneeId], references: [id])
+
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ticket {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?
+
+  category    String?
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(NEW)
+
+  cabinet     String?
+
+  creatorId   Int
+  creator     User @relation("CreatedTickets", fields: [creatorId], references: [id])
+
+  assigneeId  Int?
+  assignee    User? @relation("AssignedTickets", fields: [assigneeId], references: [id])
+
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScheduleEvent {
+  id          Int               @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime?
+
+  type        ScheduleEventType @default(OTHER)
+
+  location    String?
+  equipment   String?
+  channel     String?
+
+  responsible String?
+
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  id        Int              @id @default(autoincrement())
+  title     String?
+  type      ConversationType @default(DIRECT)
+
+  members   ConversationMember[]
+  messages  Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConversationMember {
+  id             Int @id @default(autoincrement())
+
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  userId         Int
+  user           User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             Int @id @default(autoincrement())
+  text           String
+
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  senderId       Int
+  sender         User @relation(fields: [senderId], references: [id])
+
+  createdAt DateTime @default(now())
+}

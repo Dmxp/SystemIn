@@ -1,0 +1,203 @@
+import { useState } from 'react';
+import TasksPage from './TasksPage';
+import TicketsPage from './TicketsPage';
+import SchedulePage from './SchedulePage';
+import ChatsPage from './ChatsPage';
+import UsersPage from './UsersPage';
+import DepartmentsPage from './DepartmentsPage';
+import AiPage from './AiPage';
+import SettingsPage from './SettingsPage';
+import HomePage from './HomePage';
+import logo from '../assets/9twllw18bwejhmgpadhh5hqg10jqyncq.png';
+
+const menuByRole: Record<string, string[]> = {
+  ADMIN: [
+    'Главная',
+    'Пользователи',
+    'Отделы',
+    'Задачи',
+    'Тикеты ПТО',
+    'Расписание',
+    'Чаты',
+    'AI Помощник',
+    'Аналитика',
+    'Настройки',
+  ],
+  USER: [
+    'Главная',
+    'Мои задачи',
+    'Создать заявку',
+    'Мои заявки',
+    'Расписание',
+    'AI Помощник',
+    'Чаты',
+    'Профиль',
+  ],
+  PTO_SPECIALIST: [
+    'Главная',
+    'Очередь заявок',
+    'Мои тикеты',
+    'Статистика',
+    'AI Помощник',
+    'Задачи',
+    'Чаты',
+  ],
+};
+
+export default function DashboardPage() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const menu = menuByRole[user.role] || menuByRole.USER;
+  const [activePage, setActivePage] = useState('Главная');
+
+  function logout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        background: '#061a37',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <aside
+        style={{
+          width: 300,
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+          background: 'linear-gradient(180deg, #082653, #061a37)',
+          borderRight: '1px solid rgba(255,255,255,0.12)',
+          padding: 22,
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            height: 120,
+            borderRadius: 12,
+            display: 'grid',
+            placeItems: 'center',
+            marginBottom: 30,
+            overflow: 'hidden',
+          }}
+        >
+          <img
+            src={logo}
+            alt="Логотип"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {menu.map((item) => (
+            <button
+              key={item}
+              onClick={() => setActivePage(item)}
+              style={{
+                textAlign: 'left',
+                padding: '14px 16px',
+                borderRadius: 10,
+                border: 'none',
+                background: item === activePage ? '#116ed0' : 'transparent',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: 16,
+                fontWeight: 600,
+              }}
+            >
+              {item}
+            </button>
+          ))}
+        </nav>
+
+        <button
+          onClick={logout}
+          style={{
+            marginTop: 'auto',
+            padding: 14,
+            borderRadius: 10,
+            border: '1px solid rgba(255,255,255,0.2)',
+            background: 'transparent',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: 15,
+          }}
+        >
+          Выйти
+        </button>
+      </aside>
+
+      <main style={{ flex: 1, minHeight: '100vh' }}>
+        <header
+          style={{
+            height: 120,
+            background: 'linear-gradient(90deg, #0a326b, #087fbd)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 42px',
+            borderBottom: '1px solid rgba(255,255,255,0.12)',
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0, fontSize: 28 }}>{activePage}</h1>
+            <p style={{ margin: '8px 0 0', opacity: 0.8 }}>
+              Внутренняя система управления
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 800, fontSize: 18 }}>
+              {user.fullName}
+            </div>
+            <div style={{ opacity: 0.75, marginTop: 6 }}>{user.role}</div>
+          </div>
+        </header>
+
+        <section style={{ padding: 42 }}>
+          {activePage === 'Главная' && (
+            <HomePage setActivePage={setActivePage} />
+          )}
+
+          {activePage === 'Пользователи' && <UsersPage />}
+
+          {activePage === 'Отделы' && <DepartmentsPage />}
+
+          {(activePage === 'Задачи' || activePage === 'Мои задачи') && (
+            <TasksPage />
+          )}
+
+          {(activePage === 'Тикеты ПТО' ||
+            activePage === 'Мои заявки' ||
+            activePage === 'Очередь заявок' ||
+            activePage === 'Мои тикеты') && <TicketsPage />}
+
+          {activePage === 'Создать заявку' && <TicketsPage openCreateForm />}
+
+          {activePage === 'Расписание' && <SchedulePage />}
+
+          {activePage === 'Чаты' && <ChatsPage />}
+
+          {activePage === 'AI Помощник' && <AiPage />}
+
+          {(activePage === 'Настройки' || activePage === 'Профиль') && (
+            <SettingsPage />
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}

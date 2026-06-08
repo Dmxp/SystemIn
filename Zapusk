@@ -1,0 +1,28 @@
+Терминал №1
+
+Перейди:
+
+cd C:\Users\DPalaumov\Desktop\SystemIn\backend
+
+Запуск:
+
+npm run start:dev
+
+Backend будет работать на:
+
+http://localhost:3000
+
+
+Терминал №2
+
+Перейди:
+
+cd C:\Users\DPalaumov\Desktop\SystemIn\frontend
+
+Запуск:
+
+npm run dev
+
+Frontend:
+
+http://localhost:5173
