@@ -22,7 +22,7 @@ services:
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/systemin?schema=public"
       JWT_SECRET: "systemin_secret_key"
-      DEEPSEEK_API_KEY: "sk-b5052422a54b4bebbaeeaf99c6c5680b"
+      DEEPSEEK_API_KEY: "sk-b505242aeeaf99c6c5680b"
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
     depends_on:
       - postgres
