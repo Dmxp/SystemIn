@@ -38,7 +38,7 @@ type Message = {
   };
 };
 
-const socket = io('http://localhost:3000');
+const socket = io('http://localhost:3001');
 
 export default function ChatsPage() {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');

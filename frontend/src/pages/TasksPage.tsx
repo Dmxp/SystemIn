@@ -55,6 +55,46 @@ export default function TasksPage() {
     setDepartments(response.data);
   }
 
+  async function updateTaskStatus(taskId: number, status: string) {
+    await api.patch(`/tasks/${taskId}/status`, {
+      status,
+    });
+
+    await loadTasks();
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'NEW':
+        return '#2563eb';
+
+      case 'IN_PROGRESS':
+        return '#f59e0b';
+
+      case 'DONE':
+        return '#10b981';
+
+      default:
+        return '#64748b';
+    }
+  }
+
+  function getStatusLabel(status: string) {
+    switch (status) {
+      case 'NEW':
+        return 'Новая';
+
+      case 'IN_PROGRESS':
+        return 'В работе';
+
+      case 'DONE':
+        return 'Выполнена';
+
+      default:
+        return status;
+    }
+  }
+
   async function createTask(e: React.FormEvent) {
     e.preventDefault();
 
@@ -162,6 +202,7 @@ export default function TasksPage() {
               <th style={thStyle}>Исполнитель</th>
               <th style={thStyle}>Отдел</th>
               <th style={thStyle}>Дедлайн</th>
+              <th style={thStyle}>Действия</th>
             </tr>
           </thead>
 
@@ -176,7 +217,19 @@ export default function TasksPage() {
                     </div>
                   )}
                 </td>
-                <td style={tdStyle}>{task.status}</td>
+                <td style={tdStyle}>
+                  <span
+                    style={{
+                      background: getStatusColor(task.status),
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {getStatusLabel(task.status)}
+                  </span>
+                </td>
                 <td style={tdStyle}>{task.priority}</td>
                 <td style={tdStyle}>{task.assignee?.fullName || 'Не назначен'}</td>
                 <td style={tdStyle}>{task.department?.name || '-'}</td>
@@ -184,6 +237,29 @@ export default function TasksPage() {
                   {task.deadline
                     ? new Date(task.deadline).toLocaleString('ru-RU')
                     : '-'}
+                </td>
+                <td style={tdStyle}>
+                  {task.status === 'NEW' && (
+                    <button
+                      style={smallButtonStyle}
+                      onClick={() => updateTaskStatus(task.id, 'IN_PROGRESS')}
+                    >
+                      В работу
+                    </button>
+                  )}
+
+                  {task.status === 'IN_PROGRESS' && (
+                    <button
+                      style={smallButtonStyle}
+                      onClick={() => updateTaskStatus(task.id, 'DONE')}
+                    >
+                      Выполнено
+                    </button>
+                  )}
+
+                  {task.status === 'DONE' && (
+                    <span style={{ opacity: 0.65 }}>Завершена</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -247,4 +323,14 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: 16,
+};
+
+const smallButtonStyle: React.CSSProperties = {
+  background: '#116ed0',
+  border: 'none',
+  color: 'white',
+  padding: '8px 12px',
+  borderRadius: 8,
+  cursor: 'pointer',
+  fontWeight: 700,
 };

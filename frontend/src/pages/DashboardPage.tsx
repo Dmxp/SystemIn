@@ -48,6 +48,20 @@ export default function DashboardPage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const menu = menuByRole[user.role] || menuByRole.USER;
   const [activePage, setActivePage] = useState('Главная');
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const notifications = [
+    {
+      id: 1,
+      title: 'Новая задача',
+      text: 'Вам назначена новая задача.',
+    },
+    {
+      id: 2,
+      title: 'Заявка',
+      text: 'Создана новая заявка в HelpDesk.',
+    },
+  ];
 
   function logout() {
     localStorage.removeItem('accessToken');
@@ -158,12 +172,115 @@ export default function DashboardPage() {
               Внутренняя система управления
             </p>
           </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 20,
+            }}
+          >
+            
+            {/* <button
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                border: 'none',
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: 20,
+              }}
+            >
+              🔔
+            </button> */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                style={{
+                  background: 'rgba(255,255,255,0.12)',
+                  border: 'none',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: 20,
+                  position: 'relative',
+                }}
+              >
+                🔔
 
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>
-              {user.fullName}
+                {notifications.length > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      background: '#ef4444',
+                      color: 'white',
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      fontSize: 12,
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 54,
+                    width: 320,
+                    background: '#10294f',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 16,
+                    padding: 14,
+                    zIndex: 50,
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
+                  }}
+                >
+                  <div style={{ fontWeight: 900, marginBottom: 12 }}>
+                    Уведомления
+                  </div>
+
+                  {notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        padding: 12,
+                        borderRadius: 12,
+                        background: 'rgba(255,255,255,0.06)',
+                        marginBottom: 10,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{item.title}</div>
+                      <div style={{ opacity: 0.7, marginTop: 4, fontSize: 14 }}>
+                        {item.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ opacity: 0.75, marginTop: 6 }}>{user.role}</div>
+
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: 800, fontSize: 18 }}>
+                {user.fullName}
+              </div>
+
+              <div style={{ opacity: 0.75, marginTop: 6 }}>
+                {user.role}
+              </div>
+            </div>
           </div>
         </header>
 
