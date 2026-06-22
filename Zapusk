@@ -1,28 +1,41 @@
-Терминал №1
+services:
+  postgres:
+    image: postgres:17
+    container_name: systemin-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: systemin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-Перейди:
+  backend:
+    build:
+      context: ./backend
+    container_name: systemin-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/systemin?schema=public"
+      JWT_SECRET: "systemin_secret_key"
+      DEEPSEEK_API_KEY: "сюда_твой_ключ"
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+    depends_on:
+      - postgres
 
-cd C:\Users\DPalaumov\Desktop\SystemIn\backend
+  frontend:
+    build:
+      context: ./frontend
+    container_name: systemin-frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
-Запуск:
-
-npm run start:dev
-
-Backend будет работать на:
-
-http://localhost:3000
-
-
-Терминал №2
-
-Перейди:
-
-cd C:\Users\DPalaumov\Desktop\SystemIn\frontend
-
-Запуск:
-
-npm run dev
-
-Frontend:
-
-http://localhost:5173
+volumes:
+  postgres_data:

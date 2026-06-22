@@ -4,13 +4,38 @@ services:
     container_name: systemin_postgres
     restart: always
     environment:
-      POSTGRES_USER: systemin_admin
-      POSTGRES_PASSWORD: systemin_password
-      POSTGRES_DB: systemin_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: systemin
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - systemin_pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: systemin_backend
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/systemin?schema=public"
+      JWT_SECRET: "systemin_secret_key"
+      DEEPSEEK_API_KEY: "сюда_вставь_свой_ключ"
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: systemin_frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
 volumes:
   systemin_pgdata:
