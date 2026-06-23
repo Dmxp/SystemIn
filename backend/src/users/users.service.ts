@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -78,6 +79,80 @@ export class UsersService {
       },
     });
   }
+
+  async updateMe(
+  userId: number,
+  data: {
+    fullName?: string;
+    email?: string;
+    position?: string;
+    cabinet?: string;
+  },
+) {
+  const updatedUser = await this.prisma.user.update({
+    where: { id: userId },
+    data: {
+      fullName: data.fullName,
+      email: data.email,
+      position: data.position,
+      cabinet: data.cabinet,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      position: true,
+      cabinet: true,
+      role: true,
+      department: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdAt: true,
+    },
+  });
+
+  return updatedUser;
+}
+
+  async changeMyPassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+      },
+    });
+
+    return {
+      message: 'Пароль успешно изменён',
+    };
+  }
+
   async create(data: {
     fullName: string;
     email: string;

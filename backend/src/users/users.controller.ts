@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 
@@ -39,6 +40,39 @@ export class UsersController {
     },
   ) {
     return this.usersService.update(Number(id), body);
+  }
+
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  updateMe(
+    @Req() req: any,
+    @Body()
+    body: {
+      fullName?: string;
+      email?: string;
+      position?: string;
+      cabinet?: string;
+    },
+  ) {
+    return this.usersService.updateMe(req.user.userId, body);
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  changeMyPassword(
+    @Req() req: any,
+    @Body()
+    body: {
+      currentPassword: string;
+      newPassword: string;
+    },
+  ) {
+    return this.usersService.changeMyPassword(
+      req.user.userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @Post()

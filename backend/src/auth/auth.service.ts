@@ -82,7 +82,7 @@ export class AuthService {
         role: user.role,
         position: user.position,
         cabinet: user.cabinet,
-        departmentId: user.departmentId,
+        department: user.department,
       },
     };
   }

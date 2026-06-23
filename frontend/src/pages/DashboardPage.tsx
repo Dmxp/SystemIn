@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import TasksPage from './TasksPage';
 import TicketsPage from './TicketsPage';
 import SchedulePage from './SchedulePage';
@@ -9,6 +10,16 @@ import AiPage from './AiPage';
 import SettingsPage from './SettingsPage';
 import HomePage from './HomePage';
 import logo from '../assets/9twllw18bwejhmgpadhh5hqg10jqyncq.png';
+
+const socket = io('http://localhost:3001');
+
+type NotificationItem = {
+  id: number;
+  title: string;
+  text: string;
+  type?: string;
+  createdAt?: string;
+};
 
 const menuByRole: Record<string, string[]> = {
   ADMIN: [
@@ -47,26 +58,40 @@ const menuByRole: Record<string, string[]> = {
 export default function DashboardPage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const menu = menuByRole[user.role] || menuByRole.USER;
+
   const [activePage, setActivePage] = useState('Главная');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Новая задача',
-      text: 'Вам назначена новая задача.',
-    },
-    {
-      id: 2,
-      title: 'Заявка',
-      text: 'Создана новая заявка в HelpDesk.',
-    },
-  ];
+  useEffect(() => {
+    if (!user.id) return;
+
+    socket.emit('registerNotifications', user.id);
+
+    socket.on('notification', (notification: NotificationItem) => {
+      setNotifications((prev) => {
+        const exists = prev.some((item) => item.id === notification.id);
+
+        if (exists) return prev;
+
+        return [notification, ...prev];
+      });
+    });
+
+    return () => {
+      socket.off('notification');
+    };
+  }, [user.id]);
 
   function logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     window.location.href = '/login';
+  }
+
+  function clearNotifications() {
+    setNotifications([]);
+    setShowNotifications(false);
   }
 
   return (
@@ -168,10 +193,12 @@ export default function DashboardPage() {
         >
           <div>
             <h1 style={{ margin: 0, fontSize: 28 }}>{activePage}</h1>
+
             <p style={{ margin: '8px 0 0', opacity: 0.8 }}>
               Внутренняя система управления
             </p>
           </div>
+
           <div
             style={{
               display: 'flex',
@@ -179,21 +206,6 @@ export default function DashboardPage() {
               gap: 20,
             }}
           >
-            
-            {/* <button
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: 'none',
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                cursor: 'pointer',
-                color: 'white',
-                fontSize: 20,
-              }}
-            >
-              🔔
-            </button> */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -239,7 +251,7 @@ export default function DashboardPage() {
                     position: 'absolute',
                     right: 0,
                     top: 54,
-                    width: 320,
+                    width: 340,
                     background: '#10294f',
                     border: '1px solid rgba(255,255,255,0.14)',
                     borderRadius: 16,
@@ -248,9 +260,37 @@ export default function DashboardPage() {
                     boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
                   }}
                 >
-                  <div style={{ fontWeight: 900, marginBottom: 12 }}>
-                    Уведомления
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div style={{ fontWeight: 900 }}>Уведомления</div>
+
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearNotifications}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'rgba(255,255,255,0.7)',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                        }}
+                      >
+                        Очистить
+                      </button>
+                    )}
                   </div>
+
+                  {notifications.length === 0 && (
+                    <div style={{ opacity: 0.7, padding: 12 }}>
+                      Новых уведомлений нет.
+                    </div>
+                  )}
 
                   {notifications.map((item) => (
                     <div
@@ -263,9 +303,28 @@ export default function DashboardPage() {
                       }}
                     >
                       <div style={{ fontWeight: 800 }}>{item.title}</div>
-                      <div style={{ opacity: 0.7, marginTop: 4, fontSize: 14 }}>
+
+                      <div
+                        style={{
+                          opacity: 0.7,
+                          marginTop: 4,
+                          fontSize: 14,
+                        }}
+                      >
                         {item.text}
                       </div>
+
+                      {item.createdAt && (
+                        <div
+                          style={{
+                            opacity: 0.45,
+                            marginTop: 8,
+                            fontSize: 12,
+                          }}
+                        >
+                          {new Date(item.createdAt).toLocaleString('ru-RU')}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -277,9 +336,7 @@ export default function DashboardPage() {
                 {user.fullName}
               </div>
 
-              <div style={{ opacity: 0.75, marginTop: 6 }}>
-                {user.role}
-              </div>
+              <div style={{ opacity: 0.75, marginTop: 6 }}>{user.role}</div>
             </div>
           </div>
         </header>
